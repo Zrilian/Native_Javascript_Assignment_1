@@ -71,6 +71,7 @@ function updateCards(){
         //Callback function to allow us to delete the correpsonding game from the games[] array
         const index = games.indexOf(gameToDelete);
         if (index !== -1) games.splice(index, 1);
+        refreshCatalog();
 })
 }
 
@@ -88,6 +89,7 @@ function checkImage(imageSrc) {
 }
 
 function populateFilterOption() { 
+    filterOptions = [];
     //Checks each games category and adds it to the filterOptions array if it's not a duplicate entry
     games.forEach((game) => {
         if(!filterOptions.find((option) => option == game.category)){
@@ -98,11 +100,34 @@ function populateFilterOption() {
     //Sort the array and then adds an "all" option to the frontas a default
     filterOptions.sort()
     filterOptions.unshift("All")
+
+    let currentFilter = selector.value;
+    if (!filterOptions.find((option) => option == currentFilter)){
+        currentFilter = "All"
+    }
     //Clears the dropdown menu and then populates it with the array
     selector.innerHTML= ""
     filterOptions.forEach((fOption) => {
         selector.innerHTML += `<option value="${fOption}">${fOption}</option>`
     })
+    selector.value = currentFilter;
+}
+function filterGames(){
+    const activeFilter = selector.value;
+    console.log (activeFilter);
+    if (activeFilter != "All"){
+        filteredGames = games.filter((game) => game.category == activeFilter)
+    }
+    else {
+        filteredGames = games;
+    }
+    console.log(filteredGames)
+    updateCards();
+}
+
+function refreshCatalog() {
+    populateFilterOption();
+    filterGames();
 }
 
 //Handles the submission form
@@ -117,24 +142,14 @@ submissionForm.addEventListener('submit', async (event) => {
         game.imagePath = "https://placehold.co/180x270"
     }
     games.push(game);
-    updateCards();
+
+    //updates the filtering and then update the cards
+    refreshCatalog();
     submissionForm.reset();
 });
 
-selector.addEventListener("change", () =>{
-    const activeFilter = selector.value;
-    console.log (activeFilter);
-    if (activeFilter != "All"){
-        filteredGames = games.filter((game) => game.category == activeFilter)
-    }
-    else {
-        filteredGames = games;
-    }
-    console.log(filteredGames)
-    updateCards();
-});
+selector.addEventListener("change", filterGames);
 
 
 //Set things to their initial state
-updateCards();
-populateFilterOption();
+refreshCatalog();
